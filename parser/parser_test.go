@@ -41,6 +41,23 @@ func TestLetStatements(t *testing.T) {
 	}
 }
 
+func TestParserErrors(t *testing.T) {
+	input := `
+	  let x 5;
+	  let = 10;
+	  let 838383;
+	`
+
+	lex := lexer.New(input)
+	parser := New(lex)
+
+	parser.ParseProgram()
+
+	if len(parser.Errors()) == 0 {
+		t.Fatalf("There are no errors present, expected 3")
+	}
+}
+
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let, got: %q", s.TokenLiteral())
@@ -65,4 +82,20 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	}
 
 	return true
+}
+
+func checkParseErrors(t *testing.T, p *Parser) {
+	errors := p.Errors()
+
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser has %d errors", len(errors))
+
+	for _, error := range errors {
+		t.Errorf("parser error: %s", error)
+	}
+
+	t.FailNow()
 }
