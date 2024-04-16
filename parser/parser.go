@@ -47,6 +47,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
 		return p.parserLetStatement()
+	case token.RETURN:
+		return p.parseReturnStatement()
 	default:
 		return nil
 	}
@@ -72,6 +74,19 @@ func (p *Parser) parserLetStatement() ast.Statement {
 	}
 
 	return letStmt
+}
+
+func (p *Parser) parseReturnStatement() ast.Statement {
+	returnStmt := &ast.ReturnStatement{Token: p.curToken}
+
+	p.NextToken()
+
+	// TODO: Skipping until semicolor while expression are parsealbe
+	for !p.curTokenIs(token.SEMICOLON) {
+		p.NextToken()
+	}
+
+	return returnStmt
 }
 
 // Instead of moving and check if the current token is the expected token
