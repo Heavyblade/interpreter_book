@@ -7,16 +7,37 @@ import (
 	"interpreter/token"
 )
 
+const (
+	_ int = iota
+
+	LOWEST
+	EQUALS      // ==
+	LESSGREATER // > or <
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -X or !X
+	CALL        // myFunction(X)
+)
+
 type Parser struct {
 	l *lexer.Lexer
 
 	curToken   token.Token
 	peekTooken token.Token
 	errors     []string
+
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
 }
+
+type prefixParseFn func() ast.Expression
+type infixParseFn func(ast.Expression) ast.Expression
 
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
+
+	p.prefixParseFns = map[token.TokenType]prefixParseFn{}
+	p.registerPrefix(token.IDENT, p.parseIdentifier)
 
 	p.NextToken()
 	p.NextToken()
@@ -50,7 +71,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -89,6 +110,33 @@ func (p *Parser) parseReturnStatement() ast.Statement {
 	return returnStmt
 }
 
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{Token: p.curToken}
+
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.NextToken()
+	}
+	return stmt
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixParseFns[p.curToken.Type]
+
+	if prefix == nil {
+		return nil
+	}
+
+	leftExp := prefix()
+
+	return leftExp
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+}
+
 // Instead of moving and check if the current token is the expected token
 // Here we check the peekToken and the move if is the correct one
 func (p *Parser) expectPeek(t token.TokenType) bool {
@@ -117,4 +165,12 @@ func (p *Parser) peekError(t token.TokenType) {
 	msg := fmt.Sprintf("Expected next token to be %s, got %s instead", t, p.peekTooken.Type)
 
 	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) registerPrefix(tk token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tk] = fn
+}
+
+func (p *Parser) registerInfix(tk token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tk] = fn
 }

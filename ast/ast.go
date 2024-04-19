@@ -114,3 +114,6 @@ type ExpressionStatement struct {
 
 func (l *ExpressionStatement) statementNode()       {}
 func (l *ExpressionStatement) TokenLiteral() string { return l.Token.Literal }
+func (l *ExpressionStatement) String() string {
+	return l.Expression.String()
+}
