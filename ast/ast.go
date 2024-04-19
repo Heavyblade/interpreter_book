@@ -72,12 +72,14 @@ func (l *LetStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(l.Token.Literal + " ")
-	out.WriteString(l.Name.String() + " ")
+	out.WriteString(l.Name.String())
 	out.WriteString(" = ")
 
 	if l.Value != nil {
 		out.WriteString(l.Value.String())
 	}
+
+	out.WriteString(";")
 
 	return out.String()
 }
@@ -87,6 +89,7 @@ type ReturnStatement struct {
 	ReturnValue Expression
 }
 
+func (i *ReturnStatement) expressionNode()      {}
 func (l *ReturnStatement) statementNode()       {}
 func (l *ReturnStatement) TokenLiteral() string { return l.Token.Literal }
 
@@ -99,7 +102,7 @@ func (r *ReturnStatement) String() string {
 		out.WriteString(r.ReturnValue.String())
 	}
 
-	out.WriteString(" ; ")
+	out.WriteString(";")
 
 	return out.String()
 }
