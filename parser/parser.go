@@ -20,6 +20,8 @@ const (
 	CALL        // myFunction(X)
 )
 
+// Public Parser
+
 type Parser struct {
 	l *lexer.Lexer
 
@@ -67,6 +69,8 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 	return program
 }
+
+// Private helpers
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
